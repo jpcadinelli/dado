@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#101324" />
+    <meta name="description" content="Role um dado virtual de seis lados com animação 3D, cores vibrantes e resultados aleatórios. Funciona no celular e no computador." />
+    <meta property="og:title" content="DADO — Deixe a sorte decidir" />
+    <meta property="og:description" content="Um dado virtual 3D para jogar de qualquer lugar." />
+    <meta property="og:type" content="website" />
+    
+    <style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  color-scheme: dark;
+  font-family: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #101324;
+  color: #f7f7ff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --dice-size: 172px;
+  --dice-half: 86px;
+  --result-color: #f8fafc;
+}
+* { box-sizing: border-box; }
+html { min-height: 100%; }
+body { margin: 0; min-width: 320px; min-height: 100vh; min-height: 100svh; overflow-x: hidden; background: radial-gradient(ellipse 72% 44% at 50% 54%, #1c2140 0%, #131629 47%, #101324 100%); }
+button { font: inherit; }
+a { color: inherit; }
+button, .dice-tap { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+::selection { background: #9b91ff; color: #101324; }
+.ambient { position: fixed; z-index: 0; pointer-events: none; width: 460px; height: 460px; filter: blur(100px); opacity: .18; border-radius: 50%; animation: drift 17s ease-in-out infinite alternate; }
+.ambient--one { top: -280px; left: -150px; background: #a68aff; }
+.ambient--two { right: -220px; bottom: -260px; background: #4be6d1; animation-delay: -7s; }
+.page { width: min(100% - 52px, 1030px); min-height: 100vh; min-height: 100svh; margin: 0 auto; position: relative; z-index: 1; display: flex; flex-direction: column; }
+.header { display: flex; justify-content: space-between; align-items: center; min-height: 94px; gap: 20px; border-bottom: 1px solid rgba(255,255,255,.075); }
+.brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; font: 700 22px/1 'Space Grotesk', sans-serif; letter-spacing: -.075em; }
+.brand__dot { color: #9d91ff; }
+.brand__mark { width: 32px; height: 32px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px; padding: 6px; transform: rotate(-14deg); border: 1px solid rgba(255,255,255,.18); border-radius: 10px; background: #22253f; }
+.brand__mark i { width: 100%; height: 100%; border-radius: 3px; background: #9e94ff; }
+.brand__mark i:nth-child(2) { background: #ff8baa; }.brand__mark i:nth-child(3) { background: #ffd281; }.brand__mark i:nth-child(4) { background: #5adfd0; }
+.header__badge { display: inline-flex; align-items: center; gap: 9px; font-size: 10px; letter-spacing: .16em; font-weight: 800; color: #b4b7d2; border: 1px solid rgba(255,255,255,.12); border-radius: 100px; padding: 10px 14px; white-space: nowrap; }
+.header__status, .stage__live { width: 6px; height: 6px; border-radius: 50%; background: #65e6b7; box-shadow: 0 0 0 3px rgba(101,230,183,.1); }
+main { flex: 1; padding-top: 47px; }
+.intro { text-align: center; max-width: 680px; margin: 0 auto 31px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 9px; color: #c2bcff; font-size: 10px; letter-spacing: .19em; font-weight: 800; }
+.eyebrow__spark { font-size: 17px; line-height: 1; color: #d6ccff; }
+h1 { margin: 15px 0 11px; font: 700 clamp(38px, 5.8vw, 60px)/1.12 'Space Grotesk', sans-serif; letter-spacing: -.066em; }
+h1 span { background: linear-gradient(105deg, #a69aff 8%, #f3a5db 50%, #ffd09f 93%); background-size: 200% 200%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: gradientMove 7s ease-in-out infinite alternate; }
+.intro p { margin: 0 auto; max-width: 430px; color: #a2a6c0; font-size: 14px; line-height: 1.75; }
+.play-area { width: min(100%, 640px); margin: 0 auto; }
+.stage { height: 315px; background: linear-gradient(153deg, rgba(40,43,73,.7), rgba(30,33,57,.7) 56%, rgba(33,39,68,.72)); border: 1px solid rgba(181,186,255,.13); position: relative; isolation: isolate; overflow: hidden; border-radius: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 18px 58px rgba(2,4,17,.18), inset 0 1px rgba(255,255,255,.035); }
+.stage::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle,rgba(186,193,255,.22) 1px,transparent 1px); background-size: 23px 23px; mask-image: linear-gradient(90deg, rgba(0,0,0,.3), transparent 35%, transparent 67%,rgba(0,0,0,.26)); pointer-events: none; }
+.stage__caption { position: absolute; inset: 22px 24px auto; z-index: 3; display: flex; justify-content: space-between; align-items: center; gap: 14px; color: #7e84a7; font-size: 10px; letter-spacing: .15em; font-weight: 800; }
+.stage__caption-right { display: inline-flex; align-items: center; gap: 9px; }
+.stage__ring { position: absolute; z-index: -1; top: 50%; left: 50%; border: 1px solid rgba(170,173,255,.11); border-radius: 50%; transform: translate(-50%,-50%); pointer-events: none; }
+.stage__ring--outer { width: 388px; height: 388px; }
+.stage__ring--inner { width: 280px; height: 280px; border: 1px dashed rgba(170,173,255,.18); animation: spinCircle 34s linear infinite; }
+.stage__glow { position: absolute; z-index: -1; left: 50%; top: 51%; transform: translate(-50%,-50%); width: 230px; height: 230px; border-radius: 50%; background: radial-gradient(circle,rgba(144,127,255,.22),transparent 72%); filter: blur(10px); animation: pulseGlow 5s ease-in-out infinite alternate; }
+.stage__shadow { position: absolute; z-index: -1; width: 194px; height: 36px; background: rgba(0,0,0,.43); border-radius: 50%; bottom: 47px; filter: blur(15px); animation: shadowBreathe 4.5s ease-in-out infinite; }
+.dice-tap { width: 218px; height: 220px; display: grid; place-items: center; cursor: pointer; outline: none; position: relative; margin-top: 2px; }
+.dice-tap:focus-visible { outline: 2px solid #a69aff; outline-offset: 4px; border-radius: 20px; }
+.dice-wrap { width: var(--dice-size); height: var(--dice-size); animation: diceFloat 4.5s ease-in-out infinite; }
+.dice-wrap.is-rolling { animation: diceLift 1.85s ease-in-out both; }
+.dice-wrap.is-landing { animation: diceLand .5s cubic-bezier(.18,.75,.23,1.2) both; }
+.dice { width: 100%; height: 100%; transform-style: preserve-3d; transform: rotateX(-21deg) rotateY(-29deg); transition: transform 1850ms cubic-bezier(.16,.75,.18,1); will-change: transform; }
+.face { width: 100%; height: 100%; position: absolute; inset: 0; border-radius: 23px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.36), inset -12px -14px 28px rgba(25,26,67,.11), 0 2px 10px rgba(5,7,30,.12); backface-visibility: hidden; overflow: hidden; }
+.face::before { content: ''; position: absolute; inset: -60%; background: linear-gradient(115deg,transparent 40%,rgba(255,255,255,.19) 50%,transparent 60%); transform: translateX(-40%); animation: faceShine 7s linear infinite; pointer-events: none; }
+.face--one { background: linear-gradient(145deg,#b2a3ff,#8271f6); transform: translateZ(var(--dice-half)); }
+.face--six { background: linear-gradient(145deg,#ffa4be,#f56691); transform: rotateY(180deg) translateZ(var(--dice-half)); }
+.face--three { background: linear-gradient(145deg,#88dafa,#37bceb); transform: rotateY(90deg) translateZ(var(--dice-half)); }
+.face--four { background: linear-gradient(145deg,#8af1d1,#39cfaa); transform: rotateY(-90deg) translateZ(var(--dice-half)); }
+.face--two { background: linear-gradient(145deg,#ffe5a2,#fac46b); transform: rotateX(90deg) translateZ(var(--dice-half)); }
+.face--five { background: linear-gradient(145deg,#ffbd91,#f59062); transform: rotateX(-90deg) translateZ(var(--dice-half)); }
+.pip { position: absolute; width: 20.5%; height: 20.5%; border-radius: 50%; background: #fffefa; box-shadow: inset 0 2px 3px rgba(4,13,39,.11), 0 2px 4px rgba(52,45,87,.05); }
+.p-tl { left: 16%; top: 16%; }.p-tr { right: 16%; top: 16%; }.p-ml { left: 16%; top: 39.75%; }.p-mr { right: 16%; top: 39.75%; }.p-bl { left: 16%; bottom: 16%; }.p-br { right: 16%; bottom: 16%; }.p-c { left: 39.75%; top: 39.75%; }
+.stage__hint { z-index: 3; position: absolute; bottom: 17px; margin: 0; color: #9296b3; font-weight: 700; font-size: 9px; letter-spacing: .13em; }
+.stage__hint span { display: inline-block; font-size: 15px; color: #d3cfff; margin-right: 5px; vertical-align: -1px; }
+.control-panel { display: flex; align-items: stretch; gap: 11px; padding-top: 12px; }
+.result { border: 1px solid rgba(192,196,252,.13); border-radius: 17px; background: rgba(43,46,76,.55); padding: 20px 22px; display: flex; justify-content: space-between; align-items: center; min-width: 0; flex: 1; gap: 12px; }
+.result__copy { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.result__label { font-size: 10px; letter-spacing: .16em; font-weight: 800; color: #bfc3e0; }
+.result__subtitle { font-size: 12px; color: #8f93b2; white-space: normal; line-height: 1.35; }
+.result__number { font: 700 54px/.95 'Space Grotesk', sans-serif; min-width: 38px; text-align: right; color: var(--result-color); letter-spacing: -.08em; text-shadow: 0 0 25px color-mix(in srgb,var(--result-color) 22%, transparent); }
+.result__number.is-new { animation: resultAppear .4s ease-out both; }
+.roll-button { min-width: 228px; border: 0; border-radius: 17px; cursor: pointer; color: #15162d; font-weight: 800; font-size: 15px; background: linear-gradient(115deg,#c4baff 0%,#b3a6ff 49%,#f4b9e8 100%); padding: 0 19px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 6px 22px rgba(155,142,250,.12), inset 0 1px rgba(255,255,255,.35); transition: transform .2s ease, box-shadow .2s ease, filter .2s ease; }
+.roll-button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 11px 28px rgba(155,142,250,.23); filter: brightness(1.06); }
+.roll-button:active:not(:disabled) { transform: translateY(1px) scale(.985); }
+.roll-button:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+.roll-button:disabled { cursor: progress; opacity: .74; }
+.roll-button__icon { width: 23px; height: 23px; flex-shrink: 0; }
+.roll-button__arrow { font-size: 19px; font-weight: 500; }
+.history { padding: 24px 3px 0; }
+.history__title { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #b5b9d0; font-size: 10px; font-weight: 800; letter-spacing: .14em; }
+.history__count { color: #777e9e; font-size: 9px; white-space: nowrap; }
+.history__items { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; min-height: 63px; padding: 12px 0 0; }
+.history__empty { font-size: 12px; color: #777e9f; }
+.history__chip { display: inline-flex; width: 38px; height: 38px; align-items: center; justify-content: center; border: 1px solid color-mix(in srgb,var(--chip-color) 38%, transparent); border-radius: 12px; color: var(--chip-color); background: color-mix(in srgb,var(--chip-color) 10%, transparent); font: 700 18px 'Space Grotesk',sans-serif; animation: chipEnter .32s ease both; }
+.keyboard-hint { margin: 23px auto 34px; text-align: center; color: #767d9d; font-size: 11px; }
+kbd { margin: 0 3px; padding: 4px 6px; color: #abb2d0; border: 1px solid #444966; border-bottom-width: 2px; border-radius: 5px; font: 700 9px 'DM Sans',sans-serif; letter-spacing: .08em; }
+.footer { display: flex; justify-content: space-between; gap: 20px; padding: 23px 0 27px; border-top: 1px solid rgba(255,255,255,.075); color: #656c8b; font-size: 9px; letter-spacing: .17em; font-weight: 800; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.spark { position: absolute; pointer-events: none; z-index: 5; left: 50%; top: 52%; width: 8px; height: 8px; border-radius: 3px; background: var(--spark-color); animation: sparkOut .8s ease-out both; }
+@keyframes drift { to { transform: translate(70px,65px); } }
+@keyframes gradientMove { to { background-position: 100% 100%; } }
+@keyframes spinCircle { to { transform: translate(-50%,-50%) rotate(360deg); } }
+@keyframes pulseGlow { to { opacity: .5; transform: translate(-50%,-50%) scale(1.25); } }
+@keyframes shadowBreathe { 50% { transform: scale(.82); opacity: .7; } }
+@keyframes diceFloat { 50% { transform: translateY(-9px); } }
+@keyframes diceLift { 0%,100% { transform: translateY(0); } 28% { transform: translateY(-29px) scale(1.05); } 65% { transform: translateY(-15px); } }
+@keyframes diceLand { 0% { transform: translateY(-12px) scale(1.035); } 60% { transform: translateY(5px) scale(.97); } 100% { transform: translateY(0) scale(1); } }
+@keyframes resultAppear { 0% { opacity: 0; transform: translateY(11px) scale(.7); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes chipEnter { from { opacity: 0; transform: translateY(6px) scale(.82); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes faceShine { 0%,25% { transform: translateX(-45%); } 65%,100% { transform: translateX(45%); } }
+@keyframes sparkOut { from { opacity: 1; transform: translate(-50%,-50%) rotate(0) scale(.9); } to { opacity: 0; transform: translate(calc(-50% + var(--spark-x)),calc(-50% + var(--spark-y))) rotate(220deg) scale(.25); } }
+@media (min-width: 1100px) and (min-height: 950px) { main { padding-top: 74px; } .stage { height: 355px; } .stage__shadow { bottom: 62px; } }
+@media (max-width: 620px) {
+  :root { --dice-size: 152px; --dice-half: 76px; }
+  .page { width: min(100% - 34px, 500px); }
+  .header { min-height: 77px; }
+  .brand { font-size: 21px; }
+  .header__badge { padding: 8px 10px; font-size: 8px; letter-spacing: .08em; }
+  main { padding-top: 36px; }
+  .intro { margin-bottom: 24px; }
+  h1 { font-size: clamp(37px, 9.3vw, 47px); margin-top: 14px; }
+  .intro p { max-width: 320px; font-size: 12px; }
+  .stage { height: 290px; border-radius: 22px; }
+  .stage__caption { inset: 20px 18px auto; font-size: 9px; }
+  .stage__ring--outer { width: 340px; height: 340px; }
+  .stage__ring--inner { width: 242px; height: 242px; }
+  .stage__shadow { bottom: 49px; width: 167px; }
+  .stage__hint { font-size: 8px; }
+  .control-panel { flex-direction: column; gap: 9px; padding-top: 9px; }
+  .result { padding: 14px 19px; min-height: 83px; }
+  .result__number { font-size: 50px; }
+  .roll-button { min-height: 60px; width: 100%; justify-content: center; font-size: 15px; }
+  .roll-button__arrow { margin-left: auto; }.roll-button__icon { margin-left: auto; }
+  .history { padding-top: 22px; }
+  .keyboard-hint { display: none; }
+  .footer { margin-top: 25px; padding: 20px 0; font-size: 8px; letter-spacing: .1em; }
+}
+@media (max-width: 370px) {
+  .page { width: calc(100% - 24px); }
+  .header__badge { font-size: 7px; }
+  .stage__caption-right { font-size: 8px; }
+  .footer span:last-child { display: none; }
+  .history__title { font-size: 9px; }
+}
+@media (max-height: 720px) and (min-width: 621px) { main { padding-top: 26px; } .intro { margin-bottom: 17px; } .stage { height: 280px; } .history { padding-top: 15px; } .keyboard-hint { margin: 11px auto 20px; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+
+</style>
+    <title>DADO — Deixe a sorte decidir</title>
+  </head>
+  <body>
+    <div class="ambient ambient--one" aria-hidden="true"></div>
+    <div class="ambient ambient--two" aria-hidden="true"></div>
+    <div class="page">
+      <header class="header">
+        <a class="brand" href="./" aria-label="Dado — início">
+          <span class="brand__mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span>DADO<span class="brand__dot">.</span></span>
+        </a>
+        <span class="header__badge"><span class="header__status"></span> SEU DADO VIRTUAL</span>
+      </header>
+
+      <main>
+        <div class="intro">
+          <span class="eyebrow"><span class="eyebrow__spark">✳</span> 1 DADO · 6 POSSIBILIDADES</span>
+          <h1>Deixe a sorte <span>decidir.</span></h1>
+          <p>Às vezes, tudo o que você precisa é de um pouco de acaso. Toque no dado e descubra seu número.</p>
+        </div>
+
+        <section class="play-area" aria-label="Dado virtual de seis faces">
+          <div class="stage" id="stage">
+            <div class="stage__caption"><span>01 / 06</span><span class="stage__caption-right"><span class="stage__live"></span> PRONTO PARA JOGAR</span></div>
+            <div class="stage__ring stage__ring--outer" aria-hidden="true"></div>
+            <div class="stage__ring stage__ring--inner" aria-hidden="true"></div>
+            <div class="stage__glow" aria-hidden="true"></div>
+            <div class="stage__shadow" aria-hidden="true"></div>
+
+            <div class="dice-tap" id="diceTap" role="button" tabindex="0" aria-label="Rolar dado de seis lados" title="Toque para rolar o dado">
+              <div class="dice-wrap" id="diceWrap">
+                <div class="dice" id="dice" aria-hidden="true">
+                  <div class="face face--one"><span class="pip p-c"></span></div>
+                  <div class="face face--six"><span class="pip p-tl"></span><span class="pip p-tr"></span><span class="pip p-ml"></span><span class="pip p-mr"></span><span class="pip p-bl"></span><span class="pip p-br"></span></div>
+                  <div class="face face--three"><span class="pip p-tl"></span><span class="pip p-c"></span><span class="pip p-br"></span></div>
+                  <div class="face face--four"><span class="pip p-tl"></span><span class="pip p-tr"></span><span class="pip p-bl"></span><span class="pip p-br"></span></div>
+                  <div class="face face--two"><span class="pip p-tl"></span><span class="pip p-br"></span></div>
+                  <div class="face face--five"><span class="pip p-tl"></span><span class="pip p-tr"></span><span class="pip p-c"></span><span class="pip p-bl"></span><span class="pip p-br"></span></div>
+                </div>
+              </div>
+            </div>
+            <p class="stage__hint"><span aria-hidden="true">↗</span> TOQUE NO DADO OU USE O BOTÃO</p>
+          </div>
+
+          <div class="control-panel">
+            <div class="result" aria-label="Resultado do lançamento">
+              <div class="result__copy"><span class="result__label">SEU RESULTADO</span><span class="result__subtitle" id="resultSubtitle">Aguardando o primeiro lançamento</span></div>
+              <span class="result__number" id="resultNumber" aria-hidden="true">—</span>
+            </div>
+            <button class="roll-button" id="rollButton" type="button">
+              <svg class="roll-button__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="1" fill="currentColor" stroke="none"/></svg>
+              <span id="rollButtonLabel">Rolar o dado</span>
+              <span class="roll-button__arrow" aria-hidden="true">↗</span>
+            </button>
+          </div>
+
+          <div class="history">
+            <div class="history__title"><span>ÚLTIMOS LANÇAMENTOS</span><span class="history__count" id="rollCounter">00 LANÇAMENTOS</span></div>
+            <div class="history__items" id="historyItems" aria-label="Histórico dos cinco últimos lançamentos"><span class="history__empty">Seus números aparecerão aqui ✳</span></div>
+          </div>
+        </section>
+        <p class="keyboard-hint">Dica: você também pode usar a tecla <kbd>ESPAÇO</kbd> para rolar.</p>
+      </main>
+      <footer class="footer"><span>FEITO PARA A SORTE ENCONTRAR VOCÊ.</span><span>6 FACES. INFINITAS HISTÓRIAS. ✳</span></footer>
+    </div>
+    <div class="sr-only" id="screenReaderResult" role="status" aria-live="polite" aria-atomic="true"></div>
+    <script>
+(() => {
+  'use strict';
+
+  const rollButton = document.getElementById('rollButton');
+  const buttonLabel = document.getElementById('rollButtonLabel');
+  const dice = document.getElementById('dice');
+  const diceTap = document.getElementById('diceTap');
+  const diceWrap = document.getElementById('diceWrap');
+  const resultNumber = document.getElementById('resultNumber');
+  const resultSubtitle = document.getElementById('resultSubtitle');
+  const historyItems = document.getElementById('historyItems');
+  const rollCounter = document.getElementById('rollCounter');
+  const srResult = document.getElementById('screenReaderResult');
+  const stage = document.getElementById('stage');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  const faceColors = {
+    1: '#b2a3ff',
+    2: '#ffd47f',
+    3: '#6bd5f4',
+    4: '#64dfbd',
+    5: '#ffae7c',
+    6: '#ff91b0'
+  };
+  // Opostos: 1–6, 2–5, 3–4. A orientação corresponde às faces no CSS.
+  const faceAngles = {
+    1: [0, 0],
+    2: [-90, 0],
+    3: [0, -90],
+    4: [0, 90],
+    5: [90, 0],
+    6: [0, 180]
+  };
+
+  let isRolling = false;
+  let count = 0;
+  let rolls = [];
+  let totalX = 0;
+  let totalY = 0;
+
+  function randomSide() {
+    // Rejeição do excedente evita viés no módulo de um inteiro aleatório de 32 bits.
+    if (window.crypto && window.crypto.getRandomValues) {
+      const buffer = new Uint32Array(1);
+      const limit = Math.floor(0x100000000 / 6) * 6;
+      let value;
+      do {
+        window.crypto.getRandomValues(buffer);
+        value = buffer[0];
+      } while (value >= limit);
+      return (value % 6) + 1;
+    }
+    return Math.floor(Math.random() * 6) + 1;
+  }
+
+  function renderHistory() {
+    historyItems.replaceChildren();
+    for (const value of rolls) {
+      const chip = document.createElement('span');
+      chip.className = 'history__chip';
+      chip.textContent = String(value);
+      chip.style.setProperty('--chip-color', faceColors[value]);
+      chip.setAttribute('aria-label', `Número ${value}`);
+      historyItems.appendChild(chip);
+    }
+    rollCounter.textContent = `${String(count).padStart(2, '0')} ${count === 1 ? 'LANÇAMENTO' : 'LANÇAMENTOS'}`;
+  }
+
+  function createSparks(value) {
+    if (reducedMotion.matches) return;
+    const sparks = [];
+    for (let i = 0; i < 12; i++) {
+      const spark = document.createElement('i');
+      const angle = (i / 12) * Math.PI * 2;
+      const distance = 96 + (i % 3) * 24;
+      spark.className = 'spark';
+      spark.style.setProperty('--spark-x', `${Math.cos(angle) * distance}px`);
+      spark.style.setProperty('--spark-y', `${Math.sin(angle) * distance}px`);
+      spark.style.setProperty('--spark-color', faceColors[((value + i - 1) % 6) + 1]);
+      stage.appendChild(spark);
+      sparks.push(spark);
+    }
+    window.setTimeout(() => sparks.forEach(spark => spark.remove()), 850);
+  }
+
+  function finishRoll(value) {
+    isRolling = false;
+    rollButton.disabled = false;
+    buttonLabel.textContent = 'Rolar novamente';
+    diceTap.setAttribute('aria-disabled', 'false');
+    diceWrap.classList.remove('is-rolling');
+    diceWrap.classList.add('is-landing');
+    window.setTimeout(() => diceWrap.classList.remove('is-landing'), 530);
+
+    resultNumber.textContent = String(value);
+    resultNumber.classList.remove('is-new');
+    void resultNumber.offsetWidth;
+    resultNumber.classList.add('is-new');
+    document.documentElement.style.setProperty('--result-color', faceColors[value]);
+    resultSubtitle.textContent = 'A sorte escolheu seu número!';
+    srResult.textContent = `Resultado: ${value}. Lançamento número ${count}.`;
+    rolls.unshift(value);
+    rolls = rolls.slice(0, 5);
+    renderHistory();
+    createSparks(value);
+    if (navigator.vibrate) navigator.vibrate(35);
+  }
+
+  function rollDice() {
+    if (isRolling) return;
+    isRolling = true;
+    count += 1;
+    const value = randomSide();
+    const duration = reducedMotion.matches ? 30 : 1850;
+    rollButton.disabled = true;
+    buttonLabel.textContent = 'Girando...';
+    diceTap.setAttribute('aria-disabled', 'true');
+    resultSubtitle.textContent = 'O dado está rolando...';
+    diceWrap.classList.remove('is-landing');
+    diceWrap.classList.add('is-rolling');
+
+    const [faceX, faceY] = faceAngles[value];
+    // Voltas completas acumuladas preservam o movimento contínuo entre lançamentos.
+    totalX += (3 + Math.floor(Math.random() * 2)) * 360;
+    totalY += (3 + Math.floor(Math.random() * 2)) * 360;
+    const x = totalX + faceX - 14;
+    const y = totalY + faceY - 18;
+    dice.style.transform = `rotateX(${x}deg) rotateY(${y}deg)`;
+    window.setTimeout(() => finishRoll(value), duration);
+  }
+
+  rollButton.addEventListener('click', rollDice);
+  diceTap.addEventListener('click', rollDice);
+  diceTap.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      rollDice();
+    }
+  });
+  document.addEventListener('keydown', event => {
+    if (event.code === 'Space' && !event.repeat && (event.target === document.body || event.target === document.documentElement)) {
+      event.preventDefault();
+      rollDice();
+    }
+  });
+})();
+
+</script>
+  </body>
+</html>
