@@ -1,22 +1,38 @@
-# DADO — dado virtual 3D
+# DADO. — Dados virtuais V2
 
-Um dado virtual de seis faces com animação 3D, paleta de cores vibrante e interface responsiva.
+Site estático, responsivo, sem build ou backend, publicado via GitHub Pages.
 
-## Como usar
+## Modos
 
-Abra `index.html` no navegador ou use o site publicado no GitHub Pages. Clique em **Rolar o dado**, toque diretamente no dado ou pressione **Espaço**.
+- `/` — catálogo de dados e modos de jogo.
+- `/dados/tradicional/` — dado numérico D6 em 3D.
+- `/dados/letras/` — dado de categorias D6 em 3D, com perfis editáveis.
+- `/jogos/imagem-e-acao/` — D6 numérico + D6 de categorias, com lançamentos independentes ou conjuntos.
+- `/dados/personalizado/` — até seis dados simultâneos, D4/D6/D8/D10/D12/D20 ou seis faces personalizadas. D6 é cubo 3D; demais quantidades de faces usam marcadores animados, sem representar a geometria física do poliedro.
 
-- Números de 1 a 6 com sorteio aleatório usando `crypto.getRandomValues` quando disponível.
-- Seis faces coloridas e animações 3D.
-- Histórico dos cinco últimos lançamentos e contador de jogadas.
-- Layout adaptável para celulares e computadores.
-- Suporte à preferência por movimento reduzido.
+## Executar
 
-## Publicação no GitHub Pages
+Usar um servidor estático local: `python3 -m http.server 8000` e acessar `http://localhost:8000/`. Os módulos JavaScript usam `type=module` e precisam de HTTP (não apenas `file://`).
 
-1. Acesse **Settings → Pages** neste repositório.
-2. Em **Build and deployment**, escolha **Deploy from a branch**.
-3. Selecione **main** e **/(root)** e clique em **Save**.
-4. Quando a publicação terminar, acesse https://jpcadinelli.github.io/dado/.
+## GitHub Pages
 
-Toda a aplicação está no arquivo `index.html`, sem dependências de instalação.
+Settings → Pages → Build and deployment → Deploy from a branch → `main` e `/(root)`.
+
+Site: https://jpcadinelli.github.io/dado/
+
+## Projeto
+
+- `assets/dice.js` — sorteio uniforme com `crypto.getRandomValues`, renderização/rotação de faces, animação e controle de lançamentos.
+- `assets/config.js` — predefinições, letras/categorias e configurações em `localStorage`.
+- `assets/app.js` — orquestração de cada modo.
+- `assets/styles.css` — identidade visual e responsividade.
+- `tests/` — testes de navegador automatizados (Playwright Python, quando disponível).
+
+## Imagem & Ação
+
+No modo de jogo, é possível rolar somente o dado numérico, somente o dado de letras, ou os dois ao mesmo tempo. O último resultado do dado não acionado permanece visível. Padrão configurado: `P`, `O`, `A`, `D`, `L`, `T`. Também há perfil alternativo com `M` e seis faces editáveis; adapte às regras da sua edição. Ferramenta independente, não oficial.
+
+## Versões
+
+- `backup/v1`: preserva a primeira versão antes da reforma da interface.
+- `main`: publicação atual após aprovação das mudanças.
